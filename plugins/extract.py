@@ -4,6 +4,7 @@ import logging
 import aiofiles
 import tempfile
 import uuid
+import requests
 
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
@@ -188,13 +189,16 @@ async def extract_data_handler(client: Client, query: CallbackQuery):
 
         page_content = "".join(page_parts)
 
-        response = await asyncio.to_thread(
-            telegraph.create_page,
-            title=safe_title[:200],
-            html_content=page_content,
-            author_name="DreamxBotz"
-        )
-
+        try:
+            response = await asyncio.to_thread(
+                telegraph.create_page,
+                title=safe_title[:200],
+                html_content=page_content,
+                author_name="DreamxBotz"
+            )
+        except requests.exceptions.ConnectionError:
+            await query.answer("⚠️ Telegraph service is busy. Please try again later.", show_alert=True)
+            return
         telegraph_url = response["url"]
 
         success_keyboard = []
